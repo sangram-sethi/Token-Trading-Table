@@ -13,6 +13,7 @@ import {
   CardContent,
 } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import TokenSparkline from "@/components/tokens/TokenSparkline";
 
 type SortKey = "name" | "price" | "change24h" | "tvl";
@@ -27,6 +28,11 @@ export default function TokenList() {
   const [sortKey, setSortKey] = useState<SortKey>("tvl");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
+  // pagination state
+  const [pageSize, setPageSize] = useState(5);
+  const [page, setPage] = useState(1); // 1-based
+
+  // Fetch tokens on first load
   useEffect(() => {
     if (status === "idle") {
       dispatch(fetchTokens());
@@ -58,11 +64,13 @@ export default function TokenList() {
     );
   };
 
+  // 1) category filter
   const filteredByCategory =
     filteredCategory === "all"
       ? tokens
       : tokens.filter((t) => t.category === filteredCategory);
 
+  // 2) search filter
   const searchedTokens = filteredByCategory.filter((t) => {
     if (!query.trim()) return true;
     const q = query.toLowerCase();
@@ -73,7 +81,8 @@ export default function TokenList() {
     );
   });
 
-  const visibleTokens = [...searchedTokens].sort((a, b) => {
+  // 3) sorting
+  const sortedTokens = [...searchedTokens].sort((a, b) => {
     let result = 0;
 
     switch (sortKey) {
@@ -100,21 +109,64 @@ export default function TokenList() {
     return sortDirection === "asc" ? result : -result;
   });
 
+  const totalRows = sortedTokens.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+
+  // keep page in range when filters/search/size change
+  useEffect(() => {
+    setPage((prev) => {
+      if (prev > totalPages) return totalPages;
+      if (prev < 1) return 1;
+      return prev;
+    });
+  }, [totalPages]);
+
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const pageTokens = sortedTokens.slice(startIndex, endIndex);
+
+  const displayStart = totalRows === 0 ? 0 : startIndex + 1;
+  const displayEnd = totalRows === 0 ? 0 : Math.min(endIndex, totalRows);
+
+  const handlePageSizeChange = (value: string) => {
+    const n = Number(value) || 5;
+    setPageSize(n);
+    setPage(1); // reset to first page when size changes
+  };
+
   return (
     <Card>
-      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>Tokens</CardTitle>
           <CardDescription>
-            Showing {visibleTokens.length} of {tokens.length}
+            Showing {displayStart}–{displayEnd} of {totalRows} result
+            {totalRows === 1 ? "" : "s"}
           </CardDescription>
         </div>
-        <div className="w-full max-w-xs">
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, symbol, chain..."
-          />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="w-full sm:w-56">
+            <Input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1); // reset page on search change
+              }}
+              placeholder="Search by name, symbol, chain..."
+            />
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-slate-400">
+            <span>Rows:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(e.target.value)}
+              className="rounded-lg border border-slate-700 bg-slate-900/80 px-2 py-1 text-[11px] text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+            </select>
+          </div>
         </div>
       </CardHeader>
 
@@ -131,127 +183,162 @@ export default function TokenList() {
           </div>
         )}
 
-        {status === "succeeded" && visibleTokens.length === 0 && (
+        {status === "succeeded" && totalRows === 0 && (
           <div className="py-8 text-center text-xs text-slate-400">
             No tokens match your filters.
           </div>
         )}
 
-        {status === "succeeded" && visibleTokens.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-slate-400">
-                <tr>
-                  <th className="py-2 pr-4">
-                    <button
-                      type="button"
-                      onClick={() => handleSort("name")}
-                      className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
-                    >
-                      Name
-                      {renderSortIcon("name")}
-                    </button>
-                  </th>
-                  <th className="px-4 py-2 text-[11px] font-semibold tracking-wide text-slate-400">
-                    Chain
-                  </th>
-                  <th className="px-4 py-2 text-[11px] font-semibold tracking-wide text-slate-400">
-                    Category
-                  </th>
-                  <th className="px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleSort("price")}
-                      className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
-                    >
-                      Price
-                      {renderSortIcon("price")}
-                    </button>
-                  </th>
-                  <th className="px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleSort("change24h")}
-                      className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
-                    >
-                      24h
-                      {renderSortIcon("change24h")}
-                    </button>
-                  </th>
-                  <th className="px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-slate-400">
-                    Trend
-                  </th>
-                  <th className="px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleSort("tvl")}
-                      className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
-                    >
-                      TVL
-                      {renderSortIcon("tvl")}
-                    </button>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleTokens.map((token) => {
-                  const isSelected = token.id === selectedTokenId;
+        {status === "succeeded" && totalRows > 0 && (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-slate-400">
+                  <tr>
+                    <th className="py-2 pr-4">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("name")}
+                        className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
+                      >
+                        Name
+                        {renderSortIcon("name")}
+                      </button>
+                    </th>
+                    <th className="px-4 py-2 text-[11px] font-semibold tracking-wide text-slate-400">
+                      Chain
+                    </th>
+                    <th className="px-4 py-2 text-[11px] font-semibold tracking-wide text-slate-400">
+                      Category
+                    </th>
+                    <th className="px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("price")}
+                        className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
+                      >
+                        Price
+                        {renderSortIcon("price")}
+                      </button>
+                    </th>
+                    <th className="px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("change24h")}
+                        className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
+                      >
+                        24h
+                        {renderSortIcon("change24h")}
+                      </button>
+                    </th>
+                    <th className="px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-slate-400">
+                      Trend
+                    </th>
+                    <th className="px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("tvl")}
+                        className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
+                      >
+                        TVL
+                        {renderSortIcon("tvl")}
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageTokens.map((token) => {
+                    const isSelected = token.id === selectedTokenId;
 
-                  return (
-                    <tr
-                      key={token.id}
-                      onClick={() => dispatch(selectToken(token.id))}
-                      className={`cursor-pointer border-b border-slate-900/80 transition-colors ${
-                        isSelected
-                          ? "bg-sky-500/10"
-                          : "hover:bg-slate-900/80"
-                      }`}
-                    >
-                      <td className="py-2 pr-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-slate-100">
-                            {token.name}
-                          </span>
-                          <span className="text-xs uppercase tracking-wide text-slate-500">
-                            {token.symbol}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 text-xs text-slate-300">
-                        {token.chain}
-                      </td>
-                      <td className="px-4 py-2 text-xs capitalize text-slate-300">
-                        {token.category}
-                      </td>
-                      <td className="px-4 py-2 text-right text-sm">
-                        {formatCurrency(token.priceUsd)}
-                      </td>
-                      <td
-                        className={`px-4 py-2 text-right text-sm ${
-                          token.change24h >= 0
-                            ? "text-emerald-400"
-                            : "text-rose-400"
+                    return (
+                      <tr
+                        key={token.id}
+                        onClick={() => dispatch(selectToken(token.id))}
+                        className={`cursor-pointer border-b border-slate-900/80 transition-colors ${
+                          isSelected
+                            ? "bg-sky-500/10"
+                            : "hover:bg-slate-900/80"
                         }`}
                       >
-                        {formatPercent(token.change24h)}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        <TokenSparkline
-                          points={token.history}
-                          className="mx-auto h-8 w-20"
-                          height={32}
-                          strokeWidth={1.5}
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-right text-sm text-slate-100">
-                        {formatCurrency(token.tvlUsd)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <td className="py-2 pr-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-slate-100">
+                              {token.name}
+                            </span>
+                            <span className="text-xs uppercase tracking-wide text-slate-500">
+                              {token.symbol}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 text-xs text-slate-300">
+                          {token.chain}
+                        </td>
+                        <td className="px-4 py-2 text-xs capitalize text-slate-300">
+                          {token.category}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm">
+                          {formatCurrency(token.priceUsd)}
+                        </td>
+                        <td
+                          className={`px-4 py-2 text-right text-sm ${
+                            token.change24h >= 0
+                              ? "text-emerald-400"
+                              : "text-rose-400"
+                          }`}
+                        >
+                          {formatPercent(token.change24h)}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          <TokenSparkline
+                            points={token.history}
+                            className="mx-auto h-8 w-20"
+                            height={32}
+                            strokeWidth={1.5}
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm text-slate-100">
+                          {formatCurrency(token.tvlUsd)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* pagination controls */}
+            <div className="mt-3 flex flex-col gap-2 border-t border-slate-800 pt-3 text-[11px] text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                Showing {displayStart}–{displayEnd} of {totalRows} result
+                {totalRows === 1 ? "" : "s"}
+              </div>
+              <div className="flex items-center gap-2">
+                <span>
+                  Page {page} of {totalPages}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1 || totalRows === 0}
+                  >
+                    ‹ Prev
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() =>
+                      setPage((p) => Math.min(totalPages, p + 1))
+                    }
+                    disabled={page === totalPages || totalRows === 0}
+                  >
+                    Next ›
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
