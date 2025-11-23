@@ -11,6 +11,7 @@ interface TokensState {
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
   selectedTokenId: string | null;
+  watchlist: string[]; // token IDs
 }
 
 const initialState: TokensState = {
@@ -19,6 +20,7 @@ const initialState: TokensState = {
   status: "idle",
   error: null,
   selectedTokenId: null,
+  watchlist: [],
 };
 
 // Async thunk to load tokens from our API route
@@ -52,6 +54,17 @@ const tokensSlice = createSlice({
     clearSelectedToken(state) {
       state.selectedTokenId = null;
     },
+    toggleWatchlist(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      if (state.watchlist.includes(id)) {
+        state.watchlist = state.watchlist.filter((t) => t !== id);
+      } else {
+        state.watchlist.push(id);
+      }
+    },
+    clearWatchlist(state) {
+      state.watchlist = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -75,5 +88,7 @@ export const {
   setTokens,
   selectToken,
   clearSelectedToken,
+  toggleWatchlist,
+  clearWatchlist,
 } = tokensSlice.actions;
 export default tokensSlice.reducer;
