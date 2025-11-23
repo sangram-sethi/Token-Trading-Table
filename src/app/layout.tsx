@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppProviders } from "@/providers/AppProviders";
 import TopBar from "@/components/layout/TopBar";
 import ThemeContainer from "@/components/layout/ThemeContainer";
+import Sidebar from "@/components/layout/Sidebar";
 
 export const metadata: Metadata = {
   title: "Axiom Pulse",
@@ -21,7 +22,10 @@ export default function RootLayout({
           <ThemeContainer>
             <div className="flex min-h-screen flex-col">
               <TopBar />
-              <main className="flex-1 px-4 py-4">{children}</main>
+              <div className="flex flex-1">
+                <Sidebar />
+                <main className="flex-1 px-4 py-4">{children}</main>
+              </div>
             </div>
           </ThemeContainer>
         </AppProviders>
@@ -29,4 +33,5 @@ export default function RootLayout({
     </html>
   );
 }
+
 
