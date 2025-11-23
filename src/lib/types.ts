@@ -9,4 +9,7 @@ export interface Token {
   priceUsd: number;
   change24h: number; // e.g. -0.034 => -3.4%
   tvlUsd: number;
+  // simple mock price history for sparkline (oldest → newest)
+  history: number[];
 }
+

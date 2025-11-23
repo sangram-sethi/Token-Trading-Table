@@ -13,6 +13,7 @@ import {
   CardContent,
 } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import TokenSparkline from "@/components/tokens/TokenSparkline";
 
 type SortKey = "name" | "price" | "change24h" | "tvl";
 type SortDirection = "asc" | "desc";
@@ -26,7 +27,6 @@ export default function TokenList() {
   const [sortKey, setSortKey] = useState<SortKey>("tvl");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  // Fetch tokens on first load
   useEffect(() => {
     if (status === "idle") {
       dispatch(fetchTokens());
@@ -58,13 +58,11 @@ export default function TokenList() {
     );
   };
 
-  // 1) category filter
   const filteredByCategory =
     filteredCategory === "all"
       ? tokens
       : tokens.filter((t) => t.category === filteredCategory);
 
-  // 2) search filter
   const searchedTokens = filteredByCategory.filter((t) => {
     if (!query.trim()) return true;
     const q = query.toLowerCase();
@@ -75,7 +73,6 @@ export default function TokenList() {
     );
   });
 
-  // 3) sorting
   const visibleTokens = [...searchedTokens].sort((a, b) => {
     let result = 0;
 
@@ -181,6 +178,9 @@ export default function TokenList() {
                       {renderSortIcon("change24h")}
                     </button>
                   </th>
+                  <th className="px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-slate-400">
+                    Trend
+                  </th>
                   <th className="px-4 py-2 text-right">
                     <button
                       type="button"
@@ -235,6 +235,14 @@ export default function TokenList() {
                       >
                         {formatPercent(token.change24h)}
                       </td>
+                      <td className="px-4 py-2 text-center">
+                        <TokenSparkline
+                          points={token.history}
+                          className="mx-auto h-8 w-20"
+                          height={32}
+                          strokeWidth={1.5}
+                        />
+                      </td>
                       <td className="px-4 py-2 text-right text-sm text-slate-100">
                         {formatCurrency(token.tvlUsd)}
                       </td>
@@ -249,6 +257,3 @@ export default function TokenList() {
     </Card>
   );
 }
-
-
-

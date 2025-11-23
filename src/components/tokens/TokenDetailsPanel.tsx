@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import TokenSparkline from "@/components/tokens/TokenSparkline";
+
 
 export default function TokenDetailsPanel() {
   const dispatch = useDispatch<AppDispatch>();
@@ -83,6 +85,25 @@ export default function TokenDetailsPanel() {
       </CardHeader>
 
       <CardContent className="space-y-3 text-sm">
+        <div>
+  <div className="text-[11px] uppercase tracking-wide text-slate-500">
+    Price
+  </div>
+  <div className="mt-1 text-lg font-semibold text-slate-50">
+    {formatCurrency(token.priceUsd)}
+  </div>
+
+  {/* bigger sparkline */}
+  <div className="mt-2 rounded-xl border border-slate-800 bg-slate-950/40 p-2">
+    <TokenSparkline
+      points={token.history}
+      className="h-16 w-full"
+      height={48}
+      strokeWidth={1.6}
+    />
+  </div>
+</div>
+
         <div>
           <div className="text-[11px] uppercase tracking-wide text-slate-500">
             Price
