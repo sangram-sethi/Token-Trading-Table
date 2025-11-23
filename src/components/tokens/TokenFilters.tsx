@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/store/store";
 import { setCategory } from "@/store/tokensSlice";
 import type { TokenCategory } from "@/lib/types";
+import { Button } from "@/components/ui/Button";
 
 const FILTERS: { label: string; value: TokenCategory }[] = [
   { label: "All", value: "all" },
@@ -24,18 +25,16 @@ export default function TokenFilters() {
       {FILTERS.map((filter) => {
         const isActive = active === filter.value;
         return (
-          <button
+          <Button
             key={filter.value}
             type="button"
+            size="xs"
+            variant={isActive ? "primary" : "subtle"}
+            className="rounded-full"
             onClick={() => dispatch(setCategory(filter.value))}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-              isActive
-                ? "border-sky-400 bg-sky-500/10 text-sky-100"
-                : "border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500 hover:bg-slate-800"
-            }`}
           >
             {filter.label}
-          </button>
+          </Button>
         );
       })}
     </div>

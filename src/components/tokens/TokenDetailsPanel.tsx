@@ -4,6 +4,15 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store/store";
 import { clearSelectedToken } from "@/store/tokensSlice";
 import { formatCurrency, formatPercent } from "@/lib/formatting";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 export default function TokenDetailsPanel() {
   const dispatch = useDispatch<AppDispatch>();
@@ -15,58 +24,65 @@ export default function TokenDetailsPanel() {
 
   if (status === "loading") {
     return (
-      <section className="mt-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-xs text-slate-400">
-        Loading details…
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Token details</CardTitle>
+          <CardDescription>Loading details…</CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
   if (!token) {
     return (
-      <section className="mt-4 rounded-xl border border-dashed border-slate-800 bg-slate-950/40 p-4 text-xs text-slate-400">
-        <p className="font-medium text-slate-300">Token details</p>
-        <p className="mt-2">
-          Select a token from the table to view its details here.
-        </p>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Token details</CardTitle>
+          <CardDescription>
+            Select a token from the table to view its metrics and quick notes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-[11px] text-slate-400">
+          Tip: try clicking on{" "}
+          <span className="font-semibold text-slate-200">Ethereum</span> or{" "}
+          <span className="font-semibold text-slate-200">USDC</span> in the
+          table.
+        </CardContent>
+      </Card>
     );
   }
 
   const isPositive = token.change24h >= 0;
 
   return (
-    <section className="mt-4 rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-      <div className="mb-3 flex items-start justify-between gap-2">
+    <Card>
+      <CardHeader className="flex items-start justify-between gap-2">
         <div>
-          <div className="text-xs uppercase tracking-wide text-slate-500">
-            Token
-          </div>
-          <h2 className="text-base font-semibold text-slate-50">
-            {token.name}{" "}
+          <CardTitle className="flex items-baseline gap-2">
+            {token.name}
             <span className="text-xs font-normal text-slate-400">
               ({token.symbol})
             </span>
-          </h2>
-          <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-300">
-            <span className="rounded-full bg-slate-800 px-2 py-0.5">
-              Chain: {token.chain}
-            </span>
-            <span className="rounded-full bg-slate-800 px-2 py-0.5 capitalize">
+          </CardTitle>
+          <CardDescription className="mt-2 flex flex-wrap gap-2">
+            <Badge variant="muted">Chain: {token.chain}</Badge>
+            <Badge variant="outline" className="capitalize">
               {token.category}
-            </span>
-          </div>
+            </Badge>
+          </CardDescription>
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={() => dispatch(clearSelectedToken())}
-          className="rounded-full border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] text-slate-300 hover:border-slate-500 hover:bg-slate-800"
+          className="rounded-full border border-slate-700/70 px-2 py-1 text-[11px]"
         >
           Clear
-        </button>
-      </div>
+        </Button>
+      </CardHeader>
 
-      <div className="space-y-3 text-sm">
+      <CardContent className="space-y-3 text-sm">
         <div>
           <div className="text-[11px] uppercase tracking-wide text-slate-500">
             Price
@@ -77,7 +93,7 @@ export default function TokenDetailsPanel() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-2">
+          <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
             <div className="text-[10px] uppercase tracking-wide text-slate-500">
               24h Change
             </div>
@@ -90,7 +106,7 @@ export default function TokenDetailsPanel() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-2">
+          <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
             <div className="text-[10px] uppercase tracking-wide text-slate-500">
               TVL
             </div>
@@ -100,17 +116,15 @@ export default function TokenDetailsPanel() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-2 text-[11px] text-slate-300">
-          <p className="mb-1 font-medium text-slate-200">
-            Quick note (mocked):
-          </p>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-[11px] text-slate-300">
+          <p className="mb-1 font-medium text-slate-200">Quick note</p>
           <p>
             This is placeholder copy. In a real app, you could surface on-chain
-            metrics, risk flags, liquidity sources, or strategy notes for{" "}
+            activity, liquidity sources, risk flags, or strategy notes for{" "}
             {token.symbol}.
           </p>
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }
