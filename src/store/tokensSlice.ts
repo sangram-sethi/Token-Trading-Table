@@ -10,6 +10,7 @@ interface TokensState {
   filteredCategory: TokenCategory;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
+  selectedTokenId: string | null;
 }
 
 const initialState: TokensState = {
@@ -17,6 +18,7 @@ const initialState: TokensState = {
   filteredCategory: "all",
   status: "idle",
   error: null,
+  selectedTokenId: null,
 };
 
 // Async thunk to load tokens from our API route
@@ -44,6 +46,12 @@ const tokensSlice = createSlice({
     setTokens(state, action: PayloadAction<Token[]>) {
       state.tokens = action.payload;
     },
+    selectToken(state, action: PayloadAction<string>) {
+      state.selectedTokenId = action.payload;
+    },
+    clearSelectedToken(state) {
+      state.selectedTokenId = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -62,5 +70,10 @@ const tokensSlice = createSlice({
   },
 });
 
-export const { setCategory, setTokens } = tokensSlice.actions;
+export const {
+  setCategory,
+  setTokens,
+  selectToken,
+  clearSelectedToken,
+} = tokensSlice.actions;
 export default tokensSlice.reducer;

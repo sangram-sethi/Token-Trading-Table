@@ -1,5 +1,6 @@
 import TokenFilters from "@/components/tokens/TokenFilters";
 import TokenList from "@/components/tokens/TokenList";
+import TokenDetailsPanel from "@/components/tokens/TokenDetailsPanel";
 
 export default function Page() {
   return (
@@ -11,14 +12,21 @@ export default function Page() {
               Token Overview
             </h1>
             <p className="text-xs text-slate-400">
-              Wired up with Redux + Tailwind v4 + Next App Router.
+              Filter, search, sort, and inspect token details.
             </p>
           </div>
         </div>
         <TokenFilters />
       </section>
 
-      <TokenList />
+      {/* Table + details side-by-side on md+ screens */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <TokenList />
+        </div>
+        <TokenDetailsPanel />
+      </div>
     </div>
   );
 }
+

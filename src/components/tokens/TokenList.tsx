@@ -4,14 +4,19 @@ import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect } from "react";
 import type { RootState, AppDispatch } from "@/store/store";
 import { formatCurrency, formatPercent } from "@/lib/formatting";
-import { fetchTokens } from "@/store/tokensSlice";
+import { fetchTokens, selectToken } from "@/store/tokensSlice";
+
+type SortKey = "name" | "price" | "change24h" | "tvl";
+type SortDirection = "asc" | "desc";
 
 export default function TokenList() {
   const dispatch = useDispatch<AppDispatch>();
-  const { tokens, filteredCategory, status, error } = useSelector(
-    (state: RootState) => state.tokens,
-  );
+  const { tokens, filteredCategory, status, error, selectedTokenId } =
+    useSelector((state: RootState) => state.tokens);
+
   const [query, setQuery] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("tvl");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Fetch tokens on first load
   useEffect(() => {
@@ -20,12 +25,39 @@ export default function TokenList() {
     }
   }, [status, dispatch]);
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDirection(key === "name" ? "asc" : "desc");
+    }
+  };
+
+  const renderSortIcon = (key: SortKey) => {
+    if (sortKey !== key) {
+      return (
+        <span className="ml-1 text-[10px] text-slate-500" aria-hidden>
+          ↕
+        </span>
+      );
+    }
+
+    return (
+      <span className="ml-1 text-[10px] text-slate-300" aria-hidden>
+        {sortDirection === "asc" ? "▲" : "▼"}
+      </span>
+    );
+  };
+
+  // 1) category filter
   const filteredByCategory =
     filteredCategory === "all"
       ? tokens
       : tokens.filter((t) => t.category === filteredCategory);
 
-  const visibleTokens = filteredByCategory.filter((t) => {
+  // 2) search filter
+  const searchedTokens = filteredByCategory.filter((t) => {
     if (!query.trim()) return true;
     const q = query.toLowerCase();
     return (
@@ -33,6 +65,34 @@ export default function TokenList() {
       t.symbol.toLowerCase().includes(q) ||
       t.chain.toLowerCase().includes(q)
     );
+  });
+
+  // 3) sorting
+  const visibleTokens = [...searchedTokens].sort((a, b) => {
+    let result = 0;
+
+    switch (sortKey) {
+      case "name": {
+        const an = a.name.toLowerCase();
+        const bn = b.name.toLowerCase();
+        result = an.localeCompare(bn);
+        break;
+      }
+      case "price": {
+        result = a.priceUsd - b.priceUsd;
+        break;
+      }
+      case "change24h": {
+        result = a.change24h - b.change24h;
+        break;
+      }
+      case "tvl": {
+        result = a.tvlUsd - b.tvlUsd;
+        break;
+      }
+    }
+
+    return sortDirection === "asc" ? result : -result;
   });
 
   return (
@@ -79,53 +139,100 @@ export default function TokenList() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-slate-800 text-xs uppercase tracking-wide text-slate-400">
               <tr>
-                <th className="py-2 pr-4">Name</th>
-                <th className="px-4 py-2">Chain</th>
-                <th className="px-4 py-2">Category</th>
-                <th className="px-4 py-2 text-right">Price</th>
-                <th className="px-4 py-2 text-right">24h</th>
-                <th className="px-4 py-2 text-right">TVL</th>
+                <th className="py-2 pr-4">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("name")}
+                    className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
+                  >
+                    Name
+                    {renderSortIcon("name")}
+                  </button>
+                </th>
+                <th className="px-4 py-2 text-[11px] font-semibold tracking-wide text-slate-400">
+                  Chain
+                </th>
+                <th className="px-4 py-2 text-[11px] font-semibold tracking-wide text-slate-400">
+                  Category
+                </th>
+                <th className="px-4 py-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("price")}
+                    className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
+                  >
+                    Price
+                    {renderSortIcon("price")}
+                  </button>
+                </th>
+                <th className="px-4 py-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("change24h")}
+                    className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
+                  >
+                    24h
+                    {renderSortIcon("change24h")}
+                  </button>
+                </th>
+                <th className="px-4 py-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("tvl")}
+                    className="inline-flex items-center text-[11px] font-semibold tracking-wide text-slate-300"
+                  >
+                    TVL
+                    {renderSortIcon("tvl")}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {visibleTokens.map((token) => (
-                <tr
-                  key={token.id}
-                  className="border-b border-slate-900/80 hover:bg-slate-900/80"
-                >
-                  <td className="py-2 pr-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-slate-100">
-                        {token.name}
-                      </span>
-                      <span className="text-xs uppercase tracking-wide text-slate-500">
-                        {token.symbol}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2 text-xs text-slate-300">
-                    {token.chain}
-                  </td>
-                  <td className="px-4 py-2 text-xs capitalize text-slate-300">
-                    {token.category}
-                  </td>
-                  <td className="px-4 py-2 text-right text-sm">
-                    {formatCurrency(token.priceUsd)}
-                  </td>
-                  <td
-                    className={`px-4 py-2 text-right text-sm ${
-                      token.change24h >= 0
-                        ? "text-emerald-400"
-                        : "text-rose-400"
+              {visibleTokens.map((token) => {
+                const isSelected = token.id === selectedTokenId;
+
+                return (
+                  <tr
+                    key={token.id}
+                    onClick={() => dispatch(selectToken(token.id))}
+                    className={`cursor-pointer border-b border-slate-900/80 transition-colors ${
+                      isSelected ? "bg-sky-500/10" : "hover:bg-slate-900/80"
                     }`}
                   >
-                    {formatPercent(token.change24h)}
-                  </td>
-                  <td className="px-4 py-2 text-right text-sm text-slate-100">
-                    {formatCurrency(token.tvlUsd)}
-                  </td>
-                </tr>
-              ))}
+                    <td className="py-2 pr-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-slate-100">
+                          {token.name}
+                        </span>
+                        <span className="text-xs uppercase tracking-wide text-slate-500">
+                          {token.symbol}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 text-xs text-slate-300">
+                      {token.chain}
+                    </td>
+                    <td className="px-4 py-2 text-xs capitalize text-slate-300">
+                      {token.category}
+                    </td>
+                    <td className="px-4 py-2 text-right text-sm">
+                      {formatCurrency(token.priceUsd)}
+                    </td>
+                    <td
+                      className={`px-4 py-2 text-right text-sm ${
+                        token.change24h >= 0
+                          ? "text-emerald-400"
+                          : "text-rose-400"
+                      }`}
+                    >
+                      {formatPercent(token.change24h)}
+                    </td>
+                    <td className="px-4 py-2 text-right text-sm text-slate-100">
+                      {formatCurrency(token.tvlUsd)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -133,3 +240,5 @@ export default function TokenList() {
     </section>
   );
 }
+
+
