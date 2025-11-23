@@ -1,6 +1,7 @@
 "use client";
 
 import { useSelector } from "react-redux";
+import { useState } from "react";
 import type { RootState } from "@/store/store";
 import { formatCurrency, formatPercent } from "@/lib/formatting";
 
@@ -9,19 +10,41 @@ export default function TokenList() {
   const category = useSelector(
     (state: RootState) => state.tokens.filteredCategory,
   );
+  const [query, setQuery] = useState("");
 
-  const visibleTokens =
+  const filteredByCategory =
     category === "all"
       ? tokens
       : tokens.filter((t) => t.category === category);
 
+  const visibleTokens = filteredByCategory.filter((t) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return (
+      t.name.toLowerCase().includes(q) ||
+      t.symbol.toLowerCase().includes(q) ||
+      t.chain.toLowerCase().includes(q)
+    );
+  });
+
   return (
     <section className="mt-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-      <div className="flex items-center justify-between pb-3">
-        <h2 className="text-sm font-semibold text-slate-100">Tokens</h2>
-        <span className="text-xs text-slate-400">
-          Showing {visibleTokens.length} of {tokens.length}
-        </span>
+      <div className="flex flex-col gap-2 pb-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-100">Tokens</h2>
+          <span className="text-xs text-slate-400">
+            Showing {visibleTokens.length} of {tokens.length}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, symbol, chain..."
+            className="w-56 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
+        </div>
       </div>
 
       <div className="overflow-x-auto">
