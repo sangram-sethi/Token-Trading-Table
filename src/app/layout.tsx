@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AppProviders } from "@/providers/AppProviders";
 import TopBar from "@/components/layout/TopBar";
+import ThemeContainer from "@/components/layout/ThemeContainer";
 
 export const metadata: Metadata = {
   title: "Axiom Pulse",
@@ -15,14 +16,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-950 text-slate-50 antialiased">
+      <body>
         <AppProviders>
-          <div className="flex min-h-screen flex-col">
-            <TopBar />
-            <main className="flex-1 px-4 py-4">{children}</main>
-          </div>
+          <ThemeContainer>
+            <div className="flex min-h-screen flex-col">
+              <TopBar />
+              <main className="flex-1 px-4 py-4">{children}</main>
+            </div>
+          </ThemeContainer>
         </AppProviders>
       </body>
     </html>
   );
 }
+

@@ -2,11 +2,16 @@
 
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/store/store";
-import { toggleSidebar } from "@/store/uiSlice";
+import { toggleSidebar, setTheme } from "@/store/uiSlice";
 
 export default function TopBar() {
   const dispatch = useDispatch<AppDispatch>();
   const theme = useSelector((state: RootState) => state.ui.theme);
+  const isDark = theme === "dark";
+
+  const handleThemeToggle = () => {
+    dispatch(setTheme(isDark ? "light" : "dark"));
+  };
 
   return (
     <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900/60 px-4 py-3 backdrop-blur">
@@ -27,8 +32,15 @@ export default function TopBar() {
         </span>
       </div>
 
-      <div className="text-xs text-slate-400">
-        Theme: <span className="capitalize text-slate-100">{theme}</span>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleThemeToggle}
+          className="flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-100 hover:border-slate-500 hover:bg-slate-800"
+        >
+          <span className="text-sm">{isDark ? "🌙" : "☀️"}</span>
+          <span className="capitalize">{theme}</span>
+        </button>
       </div>
     </header>
   );
