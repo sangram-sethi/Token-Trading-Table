@@ -5,7 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import type { Token, TokenCategory } from "@/lib/types";
 
-type ViewMode = "all" | "watchlist";
+export type ViewMode = "all" | "watchlist";
 
 interface TokensState {
   tokens: Token[];
@@ -17,6 +17,7 @@ interface TokensState {
   viewMode: ViewMode;
 }
 
+// Static, SSR-safe initial state
 const initialState: TokensState = {
   tokens: [],
   filteredCategory: "all",
@@ -69,6 +70,9 @@ const tokensSlice = createSlice({
     clearWatchlist(state) {
       state.watchlist = [];
     },
+    setWatchlist(state, action: PayloadAction<string[]>) {
+      state.watchlist = action.payload;
+    },
     setViewMode(state, action: PayloadAction<ViewMode>) {
       state.viewMode = action.payload;
     },
@@ -97,6 +101,7 @@ export const {
   clearSelectedToken,
   toggleWatchlist,
   clearWatchlist,
+  setWatchlist,
   setViewMode,
 } = tokensSlice.actions;
 export default tokensSlice.reducer;

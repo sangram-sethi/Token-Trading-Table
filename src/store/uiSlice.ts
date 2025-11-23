@@ -2,14 +2,15 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export type Theme = "light" | "dark";
 
-interface UiState {
-  theme: Theme;
+interface UIState {
   isSidebarOpen: boolean;
+  theme: Theme;
 }
 
-const initialState: UiState = {
-  theme: "dark",
+// Static, SSR-safe initial state
+const initialState: UIState = {
   isSidebarOpen: true,
+  theme: "dark",
 };
 
 const uiSlice = createSlice({
