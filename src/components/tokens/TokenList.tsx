@@ -8,6 +8,7 @@ import {
   fetchTokens,
   selectToken,
   toggleWatchlist,
+  setViewMode,
 } from "@/store/tokensSlice";
 import {
   Card,
@@ -32,6 +33,7 @@ export default function TokenList() {
     error,
     selectedTokenId,
     watchlist,
+    viewMode,
   } = useSelector((state: RootState) => state.tokens);
 
   const [query, setQuery] = useState("");
@@ -41,9 +43,6 @@ export default function TokenList() {
   // pagination state
   const [pageSize, setPageSize] = useState(5);
   const [page, setPage] = useState(1); // 1-based
-
-  // watchlist view toggle
-  const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
 
   // Fetch tokens on first load
   useEffect(() => {
@@ -94,8 +93,8 @@ export default function TokenList() {
     );
   });
 
-  // 3) watchlist filter (if enabled)
-  if (showWatchlistOnly) {
+  // 3) watchlist viewMode filter
+  if (viewMode === "watchlist") {
     filtered = filtered.filter((t) => watchlist.includes(t.id));
   }
 
@@ -153,7 +152,7 @@ export default function TokenList() {
   };
 
   const watchlistCount = watchlist.length;
-  const modeLabel = showWatchlistOnly ? "Watchlist only" : "All tokens";
+  const modeLabel = viewMode === "watchlist" ? "Watchlist only" : "All tokens";
 
   return (
     <Card>
@@ -181,12 +180,12 @@ export default function TokenList() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* THIS is the button you're looking for */}
             <Button
-              variant={showWatchlistOnly ? "primary" : "ghost"}
+              variant={viewMode === "watchlist" ? "primary" : "ghost"}
               size="xs"
               onClick={() => {
-                setShowWatchlistOnly((prev) => !prev);
+                const nextMode = viewMode === "watchlist" ? "all" : "watchlist";
+                dispatch(setViewMode(nextMode));
                 setPage(1);
               }}
               className="rounded-full"

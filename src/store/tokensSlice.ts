@@ -5,6 +5,8 @@ import {
 } from "@reduxjs/toolkit";
 import type { Token, TokenCategory } from "@/lib/types";
 
+type ViewMode = "all" | "watchlist";
+
 interface TokensState {
   tokens: Token[];
   filteredCategory: TokenCategory;
@@ -12,6 +14,7 @@ interface TokensState {
   error: string | null;
   selectedTokenId: string | null;
   watchlist: string[]; // token IDs
+  viewMode: ViewMode;
 }
 
 const initialState: TokensState = {
@@ -21,6 +24,7 @@ const initialState: TokensState = {
   error: null,
   selectedTokenId: null,
   watchlist: [],
+  viewMode: "all",
 };
 
 // Async thunk to load tokens from our API route
@@ -65,6 +69,9 @@ const tokensSlice = createSlice({
     clearWatchlist(state) {
       state.watchlist = [];
     },
+    setViewMode(state, action: PayloadAction<ViewMode>) {
+      state.viewMode = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -90,5 +97,6 @@ export const {
   clearSelectedToken,
   toggleWatchlist,
   clearWatchlist,
+  setViewMode,
 } = tokensSlice.actions;
 export default tokensSlice.reducer;
